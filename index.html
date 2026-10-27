@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>九九フラッシュれんしゅう</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts (M PLUS Rounded 1c) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* ぽよんとしたボタンアニメーション */
+        .btn-bounce {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+
+        /* カスタムシャドウ */
+        .pop-shadow {
+            box-shadow: 0 8px 0 0 rgba(0, 0, 0, 0.15);
+        }
+        .pop-shadow-lg {
+            box-shadow: 0 12px 0 0 rgba(0, 0, 0, 0.15);
+        }
+
+        /* 点滅アニメーション */
+        @keyframes pulse-fast {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .pulse-animation {
+            animation: pulse-fast 1.5s infinite ease-in-out;
+        }
+
+        /* スタンプアニメーション */
+        @keyframes stamp-bounce {
+            0% { transform: scale(3) rotate(-15deg); opacity: 0; }
+            60% { transform: scale(0.9) rotate(-5deg); opacity: 1; }
+            80% { transform: scale(1.1) rotate(-8deg); }
+            100% { transform: scale(1) rotate(-6deg); }
+        }
+        .stamp-appear {
+            animation: stamp-bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="bg-amber-50 text-slate-800 min-h-screen flex flex-col justify-between p-3 md:p-6 overflow-x-hidden">
+
+    <!-- ヘッダー -->
+    <header class="w-full max-w-4xl mx-auto flex justify-between items-center bg-white rounded-3xl p-4 shadow-md border-4 border-amber-300">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl md:text-4xl">⚡</span>
+            <h1 class="text-xl md:text-3xl font-extrabold text-amber-600 tracking-wider">くく フラッシュれんしゅう</h1>
+        </div>
+        <div id="step-badge" class="bg-amber-100 text-amber-800 px-4 py-1.5 rounded-full font-bold text-sm md:text-base border-2 border-amber-300">
+            ① だんを えらぶ
+        </div>
+    </header>
+
+    <!-- メインコンテンツ領域 -->
+    <main class="w-full max-w-4xl mx-auto my-auto py-4 flex-grow flex flex-col justify-center items-center">
+
+        <!-- STEP 1: 段選択画面 -->
+        <section id="screen-stage" class="w-full flex flex-col items-center">
+            <h2 class="text-2xl md:text-3xl font-extrabold text-center mb-6 text-slate-700 bg-white/80 px-6 py-2 rounded-2xl border-2 border-slate-200">
+                なんの だんを れんしゅう する？
+            </h2>
+            <div class="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4 w-full max-w-2xl">
+                <!-- 1の段〜9の段ボタン -->
+                <button onclick="selectStage(1)" class="btn-bounce bg-red-400 hover:bg-red-500 text-white font-extrabold text-2xl md:text-3xl py-5 rounded-2xl border-b-8 border-red-600 pop-shadow">1の段</button>
+                <button onclick="selectStage(2)" class="btn-bounce bg-orange-400 hover:bg-orange-500 text-white font-extrabold text-2xl md:text-3xl py-5 rounded-2xl border-b-8 border-orange-600 pop-shadow">2の段</button>
+                <button onclick="selectStage(3)" class="btn-bounce bg-yellow-400 hover:bg-yellow-500 text-white font-extrabold text-2xl md:text-3xl py-5 rounded-2xl border-b-8 border-yellow-600 pop-shadow">3の段</button>
+                <button onclick="selectStage(4)" class="btn-bounce bg-lime-500 hover:bg-lime-600 text-white font-extrabold text-2xl md:text-3xl py-5 rounded-2xl border-b-8 border-lime-700 pop-shadow">4の段</button>
+                <button onclick="selectStage(5)" class="btn-bounce bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-2xl md:text-3xl py-5 rounded-2xl border-b-8 border-emerald-700 pop-shadow">5の段</button>
+                <button onclick="selectStage(6)" class="btn-bounce bg-cyan-500 hover:bg-cyan-600 text-white font-extrabold text-2xl md:text-3xl py-5 rounded-2xl border-b-8 border-cyan-700 pop-shadow">6の段</button>
+                <button onclick="selectStage(7)" class="btn-bounce bg-blue-500 hover:bg-blue-600 text-white font-extrabold text-2xl md:text-3xl py-5 rounded-2xl border-b-8 border-blue-700 pop-shadow">7の段</button>
+                <button onclick="selectStage(8)" class="btn-bounce bg-indigo-500 hover:bg-indigo-600 text-white font-extrabold text-2xl md:text-3xl py-5 rounded-2xl border-b-8 border-indigo-700 pop-shadow">8の段</button>
+                <button onclick="selectStage(9)" class="btn-bounce bg-purple-500 hover:bg-purple-600 text-white font-extrabold text-2xl md:text-3xl py-5 rounded-2xl border-b-8 border-purple-700 pop-shadow">9の段</button>
+                <!-- ランダム（全段） -->
+                <button onclick="selectStage('all')" class="btn-bounce col-span-3 sm:col-span-1 bg-pink-500 hover:bg-pink-600 text-white font-extrabold text-xl md:text-2xl py-5 rounded-2xl border-b-8 border-pink-700 pop-shadow flex items-center justify-center">
+                    ぜんぶ<br>ランダム
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 2: モード選択画面 -->
+        <section id="screen-mode" class="w-full flex flex-col items-center hidden">
+            <div class="mb-4 text-center">
+                <span id="selected-stage-display" class="bg-amber-200 text-amber-900 font-black text-2xl md:text-3xl px-6 py-2 rounded-full border-2 border-amber-400">
+                    ◯の段
+                </span>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-center mb-6 text-slate-700 bg-white/80 px-6 py-2 rounded-2xl border-2 border-slate-200">
+                じゅんばんを えらんでね
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
+                <!-- あがり -->
+                <button onclick="startPractice('up')" class="btn-bounce bg-sky-400 hover:bg-sky-500 text-white font-black text-2xl md:text-3xl p-6 rounded-3xl border-b-8 border-sky-600 pop-shadow flex flex-col items-center justify-center space-y-2">
+                    <span class="text-4xl">↗️</span>
+                    <span>あがり</span>
+                    <span class="text-sm font-bold opacity-90">(1 → 9 の じゅん)</span>
+                </button>
+                <!-- さがり -->
+                <button onclick="startPractice('down')" class="btn-bounce bg-teal-400 hover:bg-teal-500 text-white font-black text-2xl md:text-3xl p-6 rounded-3xl border-b-8 border-teal-600 pop-shadow flex flex-col items-center justify-center space-y-2">
+                    <span class="text-4xl">↘️</span>
+                    <span>さがり</span>
+                    <span class="text-sm font-bold opacity-90">(9 → 1 の じゅん)</span>
+                </button>
+                <!-- ランダム -->
+                <button onclick="startPractice('random')" class="btn-bounce bg-orange-400 hover:bg-orange-500 text-white font-black text-2xl md:text-3xl p-6 rounded-3xl border-b-8 border-orange-600 pop-shadow flex flex-col items-center justify-center space-y-2">
+                    <span class="text-4xl">🔀</span>
+                    <span>ランダム</span>
+                    <span class="text-sm font-bold opacity-90">(バラバラ)</span>
+                </button>
+            </div>
+            <button onclick="backToStage()" class="mt-8 bg-slate-300 hover:bg-slate-400 text-slate-700 font-bold text-lg px-6 py-2 rounded-full border-b-4 border-slate-400">
+                ← もどる
+            </button>
+        </section>
+
+        <!-- STEP 3: 練習画面（フラッシュ問題） -->
+        <section id="screen-game" class="w-full flex flex-col items-center hidden max-w-2xl">
+            <!-- 上部ステータスバー -->
+            <div class="w-full flex justify-between items-center mb-4 px-2">
+                <div class="bg-white px-4 py-2 rounded-2xl border-2 border-amber-300 shadow-sm flex items-center space-x-2">
+                    <span class="text-sm font-bold text-slate-500">もんだい:</span>
+                    <span id="question-count" class="text-2xl font-black text-amber-600">1 / 9</span>
+                </div>
+                <div class="bg-white px-5 py-2 rounded-2xl border-2 border-amber-300 shadow-sm flex items-center space-x-2">
+                    <span class="text-lg">⏱️</span>
+                    <span id="timer" class="text-2xl md:text-3xl font-black text-slate-700 tracking-wider">0.00</span>
+                    <span class="text-sm font-bold text-slate-500">びょう</span>
+                </div>
+            </div>
+
+            <!-- 式表示カード -->
+            <div class="w-full bg-white rounded-3xl p-8 md:p-12 border-8 border-amber-300 shadow-2xl flex flex-col items-center justify-center min-h-[220px] md:min-h-[280px] relative overflow-hidden">
+                <!-- スタート前オーバーレイ -->
+                <div id="start-overlay" class="absolute inset-0 bg-amber-500/10 backdrop-blur-sm flex flex-col items-center justify-center z-10 p-4">
+                    <p class="text-rose-600 text-2xl md:text-3xl font-black mb-1 animate-bounce">⚡ めざせ 12秒以内！ ⚡</p>
+                    <p class="text-amber-900 text-base md:text-lg font-bold mb-4">じゅんびができたらボタンをおしてね！</p>
+                    <button id="btn-start" onclick="beginQuiz()" class="btn-bounce bg-amber-500 hover:bg-amber-600 text-white font-black text-3xl md:text-4xl px-10 py-5 rounded-3xl border-b-8 border-amber-700 pop-shadow-lg pulse-animation">
+                        ▶ スタート！
+                    </button>
+                </div>
+
+                <div id="formula-container" class="flex items-center justify-center text-5xl sm:text-7xl md:text-8xl font-black tracking-wide text-slate-800">
+                    <!-- JSで動的に入れ替え -->
+                    <span id="num1">3</span>
+                    <span class="mx-2 text-amber-500">×</span>
+                    <span id="num2">1</span>
+                    <span class="mx-2 text-slate-400">=</span>
+                    <span id="answer" class="text-rose-500 min-w-[1.2em] text-center font-black">?</span>
+                </div>
+                <!-- 九九の読み方表示エリア -->
+                <div id="reading-container" class="mt-4 text-center min-h-[2.5rem]">
+                    <span id="formula-reading" class="text-2xl md:text-3xl font-extrabold text-amber-600 bg-amber-100/80 px-4 py-1.5 rounded-2xl border border-amber-300 inline-block transition-opacity duration-200 opacity-0">
+                        <!-- ここに読み方が入ります -->
+                    </span>
+                </div>
+            </div>
+
+            <!-- 操作ボタン領域 -->
+            <div class="w-full mt-6">
+                <!-- 答えを見るボタン -->
+                <button id="btn-show-answer" onclick="showAnswer()" class="btn-bounce pulse-animation w-full bg-rose-500 hover:bg-rose-600 text-white font-black text-3xl md:text-4xl py-6 rounded-3xl border-b-8 border-rose-700 pop-shadow-lg flex items-center justify-center space-x-3 hidden">
+                    <span>こたえ</span>
+                    <span class="text-base font-bold bg-rose-700/50 px-3 py-1 rounded-full border border-rose-400/50 hidden md:inline">Enter / スペース</span>
+                </button>
+
+                <!-- つぎへボタン -->
+                <button id="btn-next" onclick="nextQuestion()" class="btn-bounce w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-3xl md:text-4xl py-6 rounded-3xl border-b-8 border-emerald-700 pop-shadow-lg flex items-center justify-center space-x-3 hidden">
+                    <span>つぎへ ➔</span>
+                    <span class="text-base font-bold bg-emerald-700/50 px-3 py-1 rounded-full border border-emerald-400/50 hidden md:inline">Enter / スペース</span>
+                </button>
+            </div>
+            <p class="text-slate-400 text-sm font-bold mt-3 text-center">
+                ※ キーボードの「Enter」か「スペース」をおしても スタート＆つぎに すすめるよ！
+            </p>
+        </section>
+
+        <!-- STEP 4: 結果画面（スタンプ表示） -->
+        <section id="screen-result" class="w-full flex flex-col items-center hidden max-w-xl">
+            <div class="w-full bg-white rounded-3xl p-6 md:p-8 border-8 border-amber-300 shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
+                
+                <h3 class="text-2xl font-black text-slate-600 mb-2">⚡ タイム ⚡</h3>
+                <div class="text-5xl md:text-6xl font-black text-slate-800 mb-6 bg-amber-50 px-8 py-3 rounded-2xl border-2 border-amber-200">
+                    <span id="final-time" class="text-amber-600">11.45</span> <span class="text-2xl md:text-3xl">びょう</span>
+                </div>
+
+                <!-- スタンプ領域 -->
+                <div class="my-4 relative min-h-[200px] flex flex-col items-center justify-center w-full">
+                    
+                    <!-- 13秒以内：合格スタンプ -->
+                    <div id="stamp-pass" class="hidden stamp-appear flex flex-col items-center">
+                        <div class="w-48 h-48 md:w-56 md:h-56 rounded-full border-8 border-dashed border-red-500 bg-red-50/90 flex flex-col items-center justify-center p-4 shadow-inner transform -rotate-6">
+                            <span class="text-red-500 text-xs md:text-sm font-black border-b-2 border-red-400 mb-1">たいへんよくできました</span>
+                            <span class="text-red-600 font-extrabold text-lg md:text-xl leading-tight text-center my-1">
+                                先生に<br>テストしてもらおう！
+                            </span>
+                            <span class="text-4xl md:text-5xl my-1">💮</span>
+                        </div>
+                    </div>
+
+                    <!-- 13秒超：応援スタンプ -->
+                    <div id="stamp-retry" class="hidden stamp-appear flex flex-col items-center">
+                        <div class="w-48 h-48 md:w-56 md:h-56 rounded-full border-8 border-dashed border-blue-500 bg-blue-50/90 flex flex-col items-center justify-center p-4 shadow-inner transform -rotate-6">
+                            <span class="text-blue-500 text-xs md:text-sm font-black border-b-2 border-blue-400 mb-1">あとすこし！</span>
+                            <span class="text-blue-600 font-extrabold text-xl md:text-2xl leading-tight text-center my-2">
+                                もっと<br>れんしゅう<br>しましょう！
+                            </span>
+                            <span class="text-3xl md:text-4xl">💪</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 次のアクション選択ボタン群 -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-4">
+                    <button onclick="retryCurrentGame()" class="btn-bounce bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xl md:text-2xl py-4 px-3 rounded-2xl border-b-8 border-amber-600 pop-shadow flex items-center justify-center space-x-2">
+                        <span>🔄</span>
+                        <span>もういちど やる</span>
+                    </button>
+                    <button onclick="resetGame()" class="btn-bounce bg-sky-400 hover:bg-sky-500 text-white font-black text-xl md:text-2xl py-4 px-3 rounded-2xl border-b-8 border-sky-600 pop-shadow flex items-center justify-center space-x-2">
+                        <span>🏠</span>
+                        <span>ほかの だん</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="w-full text-center py-2 text-slate-400 font-bold text-xs">
+        しょうがっこう 2ねんせい くく れんしゅうWebアプリ
+    </footer>
+
+    <!-- JS ロジック -->
+    <script>
+        // --- 状態管理変数 ---
+        let currentStage = null;      // 選択中の段 (1~9 または 'all')
+        let currentMode = null;       // 選択中のモード ('up', 'down', 'random')
+        let questionList = [];        // 問題の配列 [{num1: 3, num2: 1}, ...]
+        let currentIndex = 0;         // 現在の問題インデックス
+        let isShowingAnswer = false;  // 現在答えを表示中かどうか
+        let isGameRunning = false;    // ゲーム実行中フラグ（計測中か）
+        let isWaitingStart = false;   // スタート待機中フラグ
+
+        // 九九の読み方辞書データ (num1 * num2) - 式だけの読み方
+        const kukuReadings = {
+            "1x1": "いんいちが", "1x2": "いんにが", "1x3": "いんさんが", "1x4": "いんしが", "1x5": "いんごが", "1x6": "いんろくが", "1x7": "いんしちが", "1x8": "いんはちが", "1x9": "いんくが",
+            "2x1": "にいちが", "2x2": "ににんが", "2x3": "にさんが", "2x4": "にしが", "2x5": "にご", "2x6": "にろく", "2x7": "にしち", "2x8": "にはち", "2x9": "にく",
+            "3x1": "さんいちが", "3x2": "さんにが", "3x3": "さざんが", "3x4": "さんし", "3x5": "さんご", "3x6": "さぶろく", "3x7": "さんしち", "3x8": "さんぱ", "3x9": "さんく",
+            "4x1": "しいちが", "4x2": "しにが", "4x3": "しさん", "4x4": "しし", "4x5": "しご", "4x6": "しろく", "4x7": "ししち", "4x8": "しは", "4x9": "しく",
+            "5x1": "ごいちが", "5x2": "ごに", "5x3": "ごさん", "5x4": "ごし", "5x5": "ごご", "5x6": "ごろく", "5x7": "ごしち", "5x8": "ごは", "5x9": "ごっく",
+            "6x1": "ろくいちが", "6x2": "ろくに", "6x3": "ろくさん", "6x4": "ろくし", "6x5": "ろくご", "6x6": "ろくろく", "6x7": "ろくしち", "6x8": "ろくは", "6x9": "ろっく",
+            "7x1": "しちいちが", "7x2": "しちに", "7x3": "しちさん", "7x4": "しちし", "7x5": "しちご", "7x6": "しちろく", "7x7": "しちしち", "7x8": "しちは", "7x9": "しちく",
+            "8x1": "はちいちが", "8x2": "はちに", "8x3": "はちさん", "8x4": "はちし", "8x5": "はちご", "8x6": "はちろく", "8x7": "はちしち", "8x8": "はっぱ", "8x9": "はっく",
+            "9x1": "くいちが", "9x2": "くに", "9x3": "くさん", "9x4": "くし", "9x5": "くご", "9x6": "くろく", "9x7": "くしち", "9x8": "くは", "9x9": "くく"
+        };
+
+        // 答えを含めた完全な読み方辞書データ
+        const kukuFullReadings = {
+            "1x1": "いんいちが いち", "1x2": "いんにが に", "1x3": "いんさんが さん", "1x4": "いんしが し", "1x5": "いんごが ご", "1x6": "いんろくが ろく", "1x7": "いんしちがしち", "1x8": "いんはちが はち", "1x9": "いんくがく",
+            "2x1": "にいちが に", "2x2": "ににんがし", "2x3": "にさんが ろく", "2x4": "にしがはち", "2x5": "にご じゅう", "2x6": "にろく じゅうに", "2x7": "にしち じゅうし", "2x8": "にはち じゅうろく", "2x9": "にく じゅうはち",
+            "3x1": "さんいちが さん", "3x2": "さんにがろく", "3x3": "さざんが く", "3x4": "さんし じゅうに", "3x5": "さんご じゅうご", "3x6": "さぶろくじゅうはち", "3x7": "さんしち にじゅういち", "3x8": "さんぱ にじゅうし", "3x9": "さんくにじゅうしち",
+            "4x1": "しいちが し", "4x2": "しにが はち", "4x3": "しさん じゅうに", "4x4": "しし じゅうろく", "4x5": "しご にじゅう", "4x6": "しろく にじゅうし", "4x7": "ししち にじゅうはち", "4x8": "しは さんじゅうに", "4x9": "しく さんじゅうろく",
+            "5x1": "ごいちが ご", "5x2": "ごに じゅう", "5x3": "ごさん じゅうご", "5x4": "ごし にじゅう", "5x5": "ごご にじゅうご", "5x6": "ごろく さんじゅう", "5x7": "ごしち さんじゅうご", "5x8": "ごは しじゅう", "5x9": "ごっくしじゅうご",
+            "6x1": "ろくいちが ろく", "6x2": "ろくに じゅうに", "6x3": "ろくさん じゅうはち", "6x4": "ろくし にじゅうし", "6x5": "ろくご さんじゅう", "6x6": "ろくろく さんじゅうろく", "6x7": "ろくしち しじゅうに", "6x8": "ろくは しじゅうはち", "6x9": "ろっく ごじゅうし",
+            "7x1": "しちいちがしち", "7x2": "しちに じゅうし", "7x3": "しちさん にじゅういち", "7x4": "しちし にじゅうはち", "7x5": "しちご さんじゅうご", "7x6": "しちろく しじゅうに", "7x7": "しちしちしじゅうく", "7x8": "しちは ごじゅうろく", "7x9": "しちく ろくじゅうさん",
+            "8x1": "はちいちが はち", "8x2": "はちに じゅうろく", "8x3": "はちさん にじゅうし", "8x4": "はちし さんじゅうに", "8x5": "はちご しじゅう", "8x6": "はちろく しじゅうはち", "8x7": "はちしち ごじゅうろく", "8x8": "はっぱ ろくじゅうし", "8x9": "はっく しちじゅうに",
+            "9x1": "くいちがく", "9x2": "くに じゅうはち", "9x3": "くさんにじゅうしち", "9x4": "くし さんじゅうろく", "9x5": "くご しじゅうご", "9x6": "くろく ごじゅうし", "9x7": "くしち ろくじゅうさん", "9x8": "くは しちじゅうに", "9x9": "くく はちじゅういち"
+        };
+
+        // タイマー変数
+        let startTime = 0;
+        let timerInterval = null;
+        let elapsedTime = 0;
+
+        // 音声効果 (Web Audio API を使用して外部ファイル依存をなくす)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                // ポップ音
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'answer') {
+                // 答え表示音 (ピンポン)
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'finish-good') {
+                // ファンファーレ
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, C
+                notes.forEach((freq, idx) => {
+                    const noteOsc = audioCtx.createOscillator();
+                    const noteGain = audioCtx.createGain();
+                    noteOsc.connect(noteGain);
+                    noteGain.connect(audioCtx.destination);
+                    noteOsc.type = 'triangle';
+                    noteOsc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                    noteGain.gain.setValueAtTime(0.3, now + idx * 0.1);
+                    noteGain.gain.linearRampToValueAtTime(0.01, now + idx * 0.1 + 0.2);
+                    noteOsc.start(now + idx * 0.1);
+                    noteOsc.stop(now + idx * 0.1 + 0.2);
+                });
+            } else if (type === 'finish-retry') {
+                // ざんねん音
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.linearRampToValueAtTime(200, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        }
+
+        // --- 画面切り替え制御 ---
+        function showScreen(screenId) {
+            document.getElementById('screen-stage').classList.add('hidden');
+            document.getElementById('screen-mode').classList.add('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+
+            // ヘッダーのバッジ更新
+            const badge = document.getElementById('step-badge');
+            if (screenId === 'screen-stage') {
+                badge.innerText = '① だんを えらぶ';
+            } else if (screenId === 'screen-mode') {
+                badge.innerText = '② じゅんばんを えらぶ';
+            } else if (screenId === 'screen-game') {
+                badge.innerText = '③ れんしゅう中！';
+            } else if (screenId === 'screen-result') {
+                badge.innerText = '④ けっか';
+            }
+        }
+
+        // STEP 1: 段選択
+        function selectStage(stage) {
+            playSound('click');
+            currentStage = stage;
+
+            if (stage === 'all') {
+                document.getElementById('selected-stage-display').innerText = 'ぜんぶ（ランダム）';
+            } else {
+                document.getElementById('selected-stage-display').innerText = `${stage} の だん`;
+            }
+
+            showScreen('screen-mode');
+        }
+
+        function backToStage() {
+            playSound('click');
+            showScreen('screen-stage');
+        }
+
+        // STEP 2: モード選択＆スタート画面へ
+        function startPractice(mode) {
+            playSound('click');
+            currentMode = mode;
+            
+            // 問題リストの作成 (全9問)
+            questionList = generateQuestions(currentStage, currentMode);
+            currentIndex = 0;
+            isShowingAnswer = false;
+            isGameRunning = false;
+            isWaitingStart = true;
+
+            // 画面初期化（スタート前の状態）
+            showScreen('screen-game');
+            document.getElementById('start-overlay').classList.remove('hidden');
+            document.getElementById('btn-show-answer').classList.add('hidden');
+            document.getElementById('btn-next').classList.add('hidden');
+            document.getElementById('timer').innerText = '0.00';
+            
+            updateQuestionDisplay();
+        }
+
+        // 「スタート！」ボタンを押したときの処理
+        function beginQuiz() {
+            if (!isWaitingStart) return;
+            
+            playSound('click');
+            isWaitingStart = false;
+            document.getElementById('start-overlay').classList.add('hidden');
+            document.getElementById('btn-show-answer').classList.remove('hidden');
+
+            // タイマースタート
+            startTimer();
+            isGameRunning = true;
+        }
+
+        // 問題の作成ロジック
+        function generateQuestions(stage, mode) {
+            let list = [];
+
+            if (stage === 'all') {
+                // 全段の場合：1〜9の各段からランダムに1問ずつ選ぶ、あるいはランダムな九九を9つ生成
+                for (let i = 1; i <= 9; i++) {
+                    const n1 = Math.floor(Math.random() * 9) + 1;
+                    const n2 = Math.floor(Math.random() * 9) + 1;
+                    list.push({ num1: n1, num2: n2 });
+                }
+            } else {
+                // 特定の段の場合
+                const n1 = stage;
+                let seconds = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+                if (mode === 'up') {
+                    // あがり (1→9)
+                    // そのまま
+                } else if (mode === 'down') {
+                    // さがり (9→1)
+                    seconds.reverse();
+                } else if (mode === 'random') {
+                    // ランダム (シャッフル)
+                    for (let i = seconds.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [seconds[i], seconds[j]] = [seconds[j], seconds[i]];
+                    }
+                }
+
+                list = seconds.map(n2 => ({ num1: n1, num2: n2 }));
+            }
+
+            return list;
+        }
+
+        // 問題画面の表示更新
+        function updateQuestionDisplay() {
+            const q = questionList[currentIndex];
+            document.getElementById('num1').innerText = q.num1;
+            document.getElementById('num2').innerText = q.num2;
+            document.getElementById('answer').innerText = '?';
+            document.getElementById('answer').classList.add('text-slate-400');
+            document.getElementById('answer').classList.remove('text-rose-500');
+
+            // 1. 式が出た段階：式だけの読み方を表示（例: 「さんし」）
+            const key = `${q.num1}x${q.num2}`;
+            const readingEl = document.getElementById('formula-reading');
+            readingEl.innerText = kukuReadings[key] || '';
+            readingEl.classList.remove('opacity-0');
+
+            document.getElementById('question-count').innerText = `${currentIndex + 1} / 9`;
+
+            // ゲーム進行中のみ「こたえ」ボタンを表示
+            if (isGameRunning) {
+                document.getElementById('btn-show-answer').classList.remove('hidden');
+                document.getElementById('btn-next').classList.add('hidden');
+            }
+            isShowingAnswer = false;
+        }
+
+        // 答えを表示する
+        function showAnswer() {
+            if (isShowingAnswer || !isGameRunning) return;
+
+            playSound('answer');
+            const q = questionList[currentIndex];
+            const ansEl = document.getElementById('answer');
+            ansEl.innerText = q.num1 * q.num2;
+            ansEl.classList.remove('text-slate-400');
+            ansEl.classList.add('text-rose-500');
+
+            // 2. 答えを押した段階：式と答えを合わせた読み方に更新（例: 「さんし じゅうに」）
+            const key = `${q.num1}x${q.num2}`;
+            const readingEl = document.getElementById('formula-reading');
+            if (kukuFullReadings[key]) {
+                readingEl.innerText = kukuFullReadings[key];
+            }
+
+            document.getElementById('btn-show-answer').classList.add('hidden');
+            document.getElementById('btn-next').classList.remove('hidden');
+            isShowingAnswer = true;
+
+            // 9問目の答えを表示した瞬間にタイマーを停止する
+            if (currentIndex === questionList.length - 1) {
+                stopTimer();
+            }
+        }
+
+        // 次の問題へ進む
+        function nextQuestion() {
+            if (!isShowingAnswer || !isGameRunning) return;
+
+            playSound('click');
+            currentIndex++;
+
+            if (currentIndex < questionList.length) {
+                updateQuestionDisplay();
+            } else {
+                // 全問終了
+                finishGame();
+            }
+        }
+
+        // キーボード操作（Enter / Space）のハンドリング
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault(); // スクロール防止
+
+                // スタート待機中の場合、キー入力でスタート
+                if (isWaitingStart) {
+                    beginQuiz();
+                    return;
+                }
+
+                if (!isGameRunning) return;
+
+                if (!isShowingAnswer) {
+                    showAnswer();
+                } else {
+                    nextQuestion();
+                }
+            }
+        });
+
+        // --- タイマー機能 ---
+        function startTimer() {
+            startTime = Date.now();
+            elapsedTime = 0;
+            document.getElementById('timer').innerText = '0.00';
+
+            timerInterval = setInterval(() => {
+                elapsedTime = (Date.now() - startTime) / 1000;
+                document.getElementById('timer').innerText = elapsedTime.toFixed(2);
+            }, 30);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- ゲーム終了・結果画面 ---
+        function finishGame() {
+            isGameRunning = false;
+            stopTimer(); // 念のため呼び出し
+
+            const finalTime = elapsedTime.toFixed(2);
+            document.getElementById('final-time').innerText = finalTime;
+
+            // スタンプの切り替え
+            const stampPass = document.getElementById('stamp-pass');
+            const stampRetry = document.getElementById('stamp-retry');
+
+            stampPass.classList.add('hidden');
+            stampRetry.classList.add('hidden');
+
+            showScreen('screen-result');
+
+            // 12.00秒以内かどうか判定
+            if (parseFloat(finalTime) <= 12.00) {
+                playSound('finish-good');
+                stampPass.classList.remove('hidden');
+                
+                // 紙吹雪演出
+                if (typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                }
+            } else {
+                playSound('finish-retry');
+                stampRetry.classList.remove('hidden');
+            }
+        }
+
+        // 同じ段・同じモードでそのままもう一度プレイ
+        function retryCurrentGame() {
+            if (currentStage && currentMode) {
+                startPractice(currentMode);
+            } else {
+                resetGame();
+            }
+        }
+
+        // 最初から（段選択画面へ）
+        function resetGame() {
+            playSound('click');
+            showScreen('screen-stage');
+        }
+    </script>
+</body>
+</html>
+```
